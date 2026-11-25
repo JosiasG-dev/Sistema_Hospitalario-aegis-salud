@@ -1,0 +1,66 @@
+@if (auth.initializing()) {
+  <div class="module-empty">Validando acceso…</div>
+} @else if (auth.authenticated() && auth.user()) {
+  <div class="aegis-app-container">
+    <app-navbar></app-navbar>
+    <div class="app-body-layout">
+      <app-sidebar
+        [activeTab]="currentTab()"
+        [roles]="auth.user()!.roles"
+        (tabChange)="setTab($event)">
+      </app-sidebar>
+      <main class="app-main-content">
+        @if (drafts.error()) { <div class="module-alert error" role="alert">{{ drafts.error() }}</div> }
+        @switch (currentTab()) {
+        @case ('dashboard') {
+          <app-dashboard (navigateTab)="setTab($event)"></app-dashboard>
+        }
+        @case ('pacientes') {
+          <app-pacientes></app-pacientes>
+        }
+        @case ('medicos') {
+          <app-medicos></app-medicos>
+        }
+        @case ('consultorios') {
+          <app-consultorios></app-consultorios>
+        }
+        @case ('citas') {
+          <app-citas></app-citas>
+        }
+        @case ('agenda') {
+          <app-agenda></app-agenda>
+        }
+        @case ('consultas') {
+          <app-consultas></app-consultas>
+        }
+        @case ('operaciones') {
+          <app-operaciones></app-operaciones>
+        }
+        @case ('almacenes') {
+          <app-almacenes></app-almacenes>
+        }
+        @case ('farmacia') {
+          <app-farmacia></app-farmacia>
+        }
+        @case ('alimentos') {
+          <app-alimentos></app-alimentos>
+        }
+        @case ('compras') {
+          <app-compras></app-compras>
+        }
+        @case ('auditoria') {
+          <app-auditoria></app-auditoria>
+        }
+        @case ('usuarios') {
+          <app-usuarios></app-usuarios>
+        }
+        @case ('control') {
+          <app-control></app-control>
+        }
+        }
+      </main>
+    </div>
+  </div>
+} @else {
+  <app-login></app-login>
+}

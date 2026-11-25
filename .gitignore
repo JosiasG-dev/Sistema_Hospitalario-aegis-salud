@@ -1,0 +1,47 @@
+# Dependencias
+node_modules/
+vendor/
+*/node_modules/
+*/vendor/
+
+# Archivos de entorno y credenciales sensibles
+.env
+.env.*
+!.env.example
+*.env
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Compilados y caches de frontend (Angular)
+dist/
+aegis-salud/dist/
+tmp/
+out-tsc/
+bazel-out/
+.angular/
+aegis-salud/.angular/
+.sass-cache/
+
+# Logs y caches de backend (Laravel / PHP)
+*.log
+backend/storage/logs/*.log
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/*.key
+backend/.phpunit.result.cache
+backend/.phpunit.cache/
+.phpunit.result.cache
+
+# IDEs y editores
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosche
+*.sln.docstates
+.history/
+*.sublime-workspace
+.DS_Store
+Thumbs.db
