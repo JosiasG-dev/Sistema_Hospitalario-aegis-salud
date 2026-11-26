@@ -355,6 +355,10 @@ input, select, textarea {
   grid-column: span 2;
 }
 
+.operational-module .search-field {
+  margin: 1.25rem 0 0.85rem;
+}
+
 .operational-module .module-field label {
   color: #334155;
   font-size: 0.8rem;
