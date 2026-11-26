@@ -108,12 +108,20 @@ import { AuthService } from '../../services/auth.service';
         <button class="module-submit" type="submit">{{ isAdmin ? 'Enviar pedido a Nutrición' : 'Enviar solicitud a Administración' }}</button>
       </form>
 
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Buscar por paciente, servicio, dieta, alimento preparado o ID..." 
+          [(ngModel)]="searchQuery" 
+          class="search-input" />
+      </div>
+
       <section class="module-records" aria-label="Entregas de alimentos">
-        @for (record of records.mealOrders(); track record.id) {
+        @for (record of filteredMealOrders; track record.id) {
           <article class="module-record">
             <div class="module-record-head">
               <h3>{{ record.patientName || patientName(record.patientId) }} <span class="module-muted">· {{ record.id }}</span></h3>
-              <span class="module-badge">{{ record.status }}</span>
+              <span class="module-badge" [ngClass]="{'badge-success': record.status === 'Entregada', 'badge-danger': record.status === 'Cancelada', 'badge-info': record.status === 'Preparado', 'badge-warning': record.status === 'Solicitada' || record.status === 'Pendiente'}">{{ record.status }}</span>
             </div>
             @if (record.bed) { <p><strong>Cama:</strong> {{ record.bed }}</p> }
             <p><strong>Servicio:</strong> {{ record.meal }} · <strong>Fecha:</strong> {{ record.deliveryDate }} · <strong>Dieta:</strong> {{ record.diet }}</p>
@@ -123,8 +131,8 @@ import { AuthService } from '../../services/auth.service';
             <div class="module-record-foot">
               @if (record.status === 'Solicitada') {
                 @if (isAdmin) {
-                  <button type="button" class="module-submit" (click)="changeStatus(record.id, 'Pendiente')">Confirmar pedido</button>
-                  <button type="button" class="module-button-secondary" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
+                  <button type="button" class="module-submit module-button-success" (click)="changeStatus(record.id, 'Pendiente')">Confirmar pedido</button>
+                  <button type="button" class="module-button-danger" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
                 } @else {
                   <span class="module-muted">Pendiente de confirmación de Administración.</span>
                 }
@@ -135,21 +143,21 @@ import { AuthService } from '../../services/auth.service';
                       placeholder="Alimento preparado (ej. Arroz blanco)" maxlength="180" style="flex:1;min-width:200px" />
                     <button type="button" class="module-submit" (click)="markPrepared(record)">Marcar alimento preparado</button>
                     @if (isAdmin) {
-                      <button type="button" class="module-button-secondary" (click)="changeStatus(record.id, 'Cancelada')">Cancelar</button>
+                      <button type="button" class="module-button-danger" (click)="changeStatus(record.id, 'Cancelada')">Cancelar</button>
                     }
                   </div>
                 }
               } @else if (record.status === 'Preparado') {
                 @if (isAdmin) {
-                  <button type="button" class="module-submit" (click)="changeStatus(record.id, 'Entregada')">Autorizar entrega final</button>
-                  <button type="button" class="module-button-secondary" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
+                  <button type="button" class="module-submit module-button-success" (click)="changeStatus(record.id, 'Entregada')">Autorizar entrega final</button>
+                  <button type="button" class="module-button-danger" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
                 } @else {
                   <span class="module-muted">Alimento preparado · Pendiente de autorización final de Administración.</span>
                 }
               } @else if (record.status === 'Entregada') {
-                <span class="module-muted">Entrega autorizada y completada por Administración.</span>
+                <span class="module-muted" style="color: #15803d; font-weight: 600;">Entrega autorizada y confirmada por Administración.</span>
               } @else {
-                <span class="module-muted">Orden cancelada.</span>
+                <span class="module-muted" style="color: #b91c1c; font-weight: 600;">Orden rechazada / cancelada.</span>
               }
             </div>
           </article>
@@ -166,6 +174,7 @@ export class AlimentosComponent implements OnInit {
   readonly records = inject(OperationalRecordsService);
   readonly drafts = inject(FormDraftService);
   readonly preparedFoodByOrder: Record<string, string> = {};
+  searchQuery = '';
   form = {
     patientId: '',
     meal: 'Desayuno' as MealOrderRecord['meal'],
@@ -208,6 +217,22 @@ export class AlimentosComponent implements OnInit {
 
   get deliveredOrdersCount(): number {
     return this.records.mealOrders().filter(order => order.status === 'Entregada').length;
+  }
+
+  get filteredMealOrders() {
+    const q = this.searchQuery.trim().toLowerCase();
+    const list = this.records.mealOrders();
+    if (!q) return list;
+    return list.filter(order =>
+      (order.patientName && order.patientName.toLowerCase().includes(q)) ||
+      this.patientName(order.patientId).toLowerCase().includes(q) ||
+      order.meal.toLowerCase().includes(q) ||
+      order.diet.toLowerCase().includes(q) ||
+      (order.preparedFood && order.preparedFood.toLowerCase().includes(q)) ||
+      (order.notes && order.notes.toLowerCase().includes(q)) ||
+      order.id.toLowerCase().includes(q) ||
+      (order.status && order.status.toLowerCase().includes(q))
+    );
   }
 
   patientName(id: string): string {

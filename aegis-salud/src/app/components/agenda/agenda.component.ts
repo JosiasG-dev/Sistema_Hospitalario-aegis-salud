@@ -540,7 +540,7 @@ export class AgendaComponent implements OnInit {
 
   get canManage(): boolean { return this.auth.hasRole('admin'); }
   get activeDoctors() { return this.hospital.doctors().filter(d => d.status === 'Activo'); }
-  get activeRooms() { return this.hospital.rooms().filter(r => r.status === 'Disponible'); }
+  get activeRooms() { return this.hospital.rooms().filter(r => r.status !== 'Dado de Baja'); }
 
   shiftLabel(key: string): string {
     return SHIFTS.find(s => s.key === key)?.label ?? key;
@@ -589,6 +589,7 @@ export class AgendaComponent implements OnInit {
     if (ok) {
       this.draft?.clearDraft();
       this.assignForm = { doctorId: '', roomId: '', date: this.today, shift: 'M', changeReason: '' };
+      await this.records.fetchDoctorAssignments({ startDate: this.weekStart, endDate: this.weekEnd });
       await this.loadDemandMetrics();
     }
   }

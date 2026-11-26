@@ -134,12 +134,20 @@ import { FormDraftService } from '../../services/form-draft.service';
         </button>
       </form>
 
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Buscar dispensación por paciente, medicamento, receta o ID..." 
+          [(ngModel)]="searchQuery" 
+          class="search-input" />
+      </div>
+
       <section class="module-records" aria-label="Dispensaciones">
-        @for (record of records.dispensations(); track record.id) {
+        @for (record of filteredDispensations; track record.id) {
           <article class="module-record">
             <div class="module-record-head">
               <h3>{{ itemName(record.itemId) }} <span class="module-muted">· {{ record.id }}</span></h3>
-              <span class="module-badge">{{ record.status || 'Autorizada' }} · {{ record.quantity }} unidad(es)</span>
+              <span class="module-badge" [ngClass]="{'badge-success': (record.status || 'Autorizada') === 'Autorizada' || record.status === 'Surtida', 'badge-danger': record.status === 'Cancelada', 'badge-warning': record.status === 'Solicitada'}">{{ record.status || 'Autorizada' }} · {{ record.quantity }} unidad(es)</span>
             </div>
             <p><strong>Paciente:</strong> {{ patientName(record.patientId) }} · <strong>Receta:</strong> {{ record.prescription }}</p>
             <p><strong>Responsable:</strong> {{ record.responsible }} · <strong>Fecha:</strong> {{ record.dispensedAt | date:'medium' }}</p>
@@ -151,21 +159,21 @@ import { FormDraftService } from '../../services/form-draft.service';
             <div class="module-record-foot">
               @if (record.status === 'Solicitada') {
                 @if (!isAdmin) {
-                  <button type="button" class="module-submit" (click)="fulfillOrder(record.id)">Dar / Surtir medicamento</button>
+                  <button type="button" class="module-submit module-button-success" (click)="fulfillOrder(record.id)">Dar / Surtir medicamento</button>
                 } @else {
-                  <button type="button" class="module-button-secondary" (click)="changeStatus(record.id, 'Cancelada')">Cancelar pedido</button>
+                  <button type="button" class="module-button-danger" (click)="changeStatus(record.id, 'Cancelada')">Cancelar pedido</button>
                 }
               } @else if (record.status === 'Surtida') {
                 @if (isAdmin) {
-                  <button type="button" class="module-submit" (click)="changeStatus(record.id, 'Autorizada')">Autorizar entrega final</button>
-                  <button type="button" class="module-button-secondary" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
+                  <button type="button" class="module-submit module-button-success" (click)="changeStatus(record.id, 'Autorizada')">Autorizar entrega final</button>
+                  <button type="button" class="module-button-danger" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
                 } @else {
                   <span class="module-muted">Medicamento surtido · Pendiente de autorización final de Administración.</span>
                 }
               } @else if (record.status === 'Cancelada') {
-                <span class="module-muted">Pedido cancelado.</span>
+                <span class="module-muted" style="color: #b91c1c; font-weight: 600;">Pedido rechazado / cancelado.</span>
               } @else {
-                <span class="module-muted">Entrega autorizada por Administración (lotes FEFO descontados).</span>
+                <span class="module-muted" style="color: #15803d; font-weight: 600;">Entrega autorizada por Administración (confirmada).</span>
               }
             </div>
           </article>
@@ -192,6 +200,7 @@ export class FarmaciaComponent implements OnInit, OnDestroy {
   readonly hospital = inject(HospitalService);
   readonly records = inject(OperationalRecordsService);
   readonly drafts = inject(FormDraftService);
+  searchQuery = '';
   patientSearch = '';
   patientResultsOpen = false;
   private patientResultsTimeout?: number;
@@ -277,6 +286,19 @@ export class FarmaciaComponent implements OnInit, OnDestroy {
 
   get pharmacyStaff() {
     return this.records.areaStaff().farmacia;
+  }
+
+  get filteredDispensations() {
+    const q = this.searchQuery.trim().toLowerCase();
+    const list = this.records.dispensations();
+    if (!q) return list;
+    return list.filter(record =>
+      this.itemName(record.itemId).toLowerCase().includes(q) ||
+      this.patientName(record.patientId).toLowerCase().includes(q) ||
+      record.prescription.toLowerCase().includes(q) ||
+      record.id.toLowerCase().includes(q) ||
+      (record.status && record.status.toLowerCase().includes(q))
+    );
   }
 
   get pharmacyStaffNames(): string {

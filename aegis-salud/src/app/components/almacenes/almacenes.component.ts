@@ -103,6 +103,14 @@ import { AuthService } from '../../services/auth.service';
         <button class="module-submit" type="submit">Guardar artículo</button>
       </form>
 
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Buscar artículo por nombre, código o categoría..." 
+          [(ngModel)]="searchQuery" 
+          class="search-input" />
+      </div>
+
       <div class="module-field">
         <label for="stock-filter">Ver categoría</label>
         <select id="stock-filter" [(ngModel)]="categoryFilter" name="categoryFilter">
@@ -173,6 +181,7 @@ export class AlmacenesComponent implements OnInit {
   readonly drafts = inject(FormDraftService);
   readonly measurementUnits = MEASUREMENT_UNITS;
   categoryFilter: 'Todas' | InventoryCategory = 'Todas';
+  searchQuery = '';
   form = {
     name: '',
     category: 'Insumos hospitalarios' as InventoryCategory,
@@ -197,9 +206,18 @@ export class AlmacenesComponent implements OnInit {
   }
 
   get filteredItems() {
-    return this.categoryFilter === 'Todas'
+    const q = this.searchQuery.trim().toLowerCase();
+    const items = this.categoryFilter === 'Todas'
       ? this.records.inventory()
       : this.records.inventory().filter(item => item.category === this.categoryFilter);
+
+    if (!q) return items;
+    return items.filter(item =>
+      item.name.toLowerCase().includes(q) ||
+      item.id.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q) ||
+      (item.batchCode && item.batchCode.toLowerCase().includes(q))
+    );
   }
 
   get lowStockCount(): number {

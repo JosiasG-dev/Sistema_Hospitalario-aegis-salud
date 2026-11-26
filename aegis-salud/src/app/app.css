@@ -195,6 +195,86 @@
   padding: 0.25rem 0.6rem;
 }
 
+.module-badge.badge-success,
+.badge-status-success {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #bbf7d0;
+}
+
+.module-badge.badge-danger,
+.badge-status-danger {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca;
+}
+
+.module-badge.badge-warning,
+.badge-status-warning {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a;
+}
+
+.module-badge.badge-info,
+.badge-status-info {
+  background: #e0f2fe !important;
+  color: #0369a1 !important;
+  border: 1px solid #bae6fd;
+}
+
+.module-button-danger {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fca5a5 !important;
+  border-radius: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.module-button-danger:hover {
+  background: #b91c1c !important;
+  color: #fff !important;
+}
+
+.module-button-success {
+  background: #15803d !important;
+  color: #fff !important;
+  border: 1px solid #166534 !important;
+  border-radius: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.module-button-success:hover {
+  background: #166534 !important;
+}
+
+.search-box {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.search-box .search-input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.92rem;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-box .search-input:focus {
+  outline: none;
+  border-color: #8b1e1e;
+  box-shadow: 0 0 0 3px rgba(139, 30, 30, 0.12);
+}
+
 .module-empty {
   border: 1px dashed #cbd5e1;
   border-radius: 0.7rem;

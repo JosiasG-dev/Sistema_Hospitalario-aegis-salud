@@ -140,8 +140,8 @@ import { AuthService } from '../../services/auth.service';
                     <strong>EGRESO REGISTRADO</strong>
                   </div>
                   <div class="d-info-body">
-                    <p><strong>Fecha de egreso:</strong> {{ p.dischargeDate }}</p>
-                    @if (!isAdministrative && p.dischargeReason) { <p><strong>Motivo:</strong> {{ p.dischargeReason }}</p> }
+                    <p><strong>Fecha de egreso:</strong> {{ p.dischargeDate || (p.medicalDischargeAt | date:'yyyy-MM-dd') || (p.administrativeDischargeAt | date:'yyyy-MM-dd') }}</p>
+                    @if (p.dischargeReason || p.medicalDischargeAt) { <p><strong>Motivo:</strong> {{ p.dischargeReason || 'Alta médica autorizada' }}</p> }
                     @if (!isAdministrative && p.dischargeNotes) {
                       <p><strong>Observaciones:</strong> {{ p.dischargeNotes }}</p>
                     }
@@ -1007,7 +1007,7 @@ export class PacientesComponent {
 
       if (!matchQuery) return false;
 
-      if (this.filterStatus === 'ACTIVO') return p.status === 'Activo';
+      if (this.filterStatus === 'ACTIVO') return p.status === 'Activo' && !p.medicalDischargeAt && !p.dischargeDate;
       if (this.filterStatus === 'EGRESO') return this.isDischarged(p);
       return true;
     });
@@ -1027,15 +1027,16 @@ export class PacientesComponent {
   }
 
   patientStatusLabel(patient: Patient): string {
-    if (patient.status === 'Activo') return 'Ingreso activo';
     if (patient.status === 'Dado de Alta') return 'Alta administrativa completada';
     if (patient.dischargeReason === 'Fallecimiento') return 'Fallecimiento registrado';
-    if (patient.dischargeReason?.startsWith('Alta Médica')) return 'Alta médica registrada';
+    if (patient.dischargeReason?.startsWith('Alta Médica') || patient.medicalDischargeAt) return 'Alta médica registrada';
+    if (patient.status === 'Dado de Baja') return 'Egreso registrado';
+    if (patient.status === 'Activo') return 'Ingreso activo';
     return 'Egreso registrado';
   }
 
   isDischarged(patient: Patient): boolean {
-    return patient.status === 'Dado de Alta' || patient.status === 'Dado de Baja';
+    return patient.status === 'Dado de Alta' || patient.status === 'Dado de Baja' || !!patient.medicalDischargeAt || !!patient.dischargeDate;
   }
 
   openIngresoModal() {

@@ -101,6 +101,29 @@ class DoctorAssignmentsAndRotationTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_assign_doctor_using_snake_case_keys(): void
+    {
+        $admin = $this->createAdmin();
+        $room = $this->createRoom('ROOM-SNAKE-1', 'CONS-SNAKE');
+        $doctor = $this->createDoctor('DOC-SNAKE-1', $room->id);
+        $date = today()->toDateString();
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/doctor-assignments', [
+            'doctor_id' => $doctor->id,
+            'room_id' => $room->id,
+            'date' => $date,
+            'shift' => 'T',
+            'change_reason' => 'Asignación vespertina con snake_case',
+        ])->assertCreated();
+
+        $this->assertDatabaseHas('doctor_assignments', [
+            'doctor_id' => $doctor->id,
+            'room_id' => $room->id,
+            'date' => $date,
+            'shift' => 'T',
+        ]);
+    }
+
     public function test_two_doctors_cannot_be_in_same_room_on_same_date_and_shift(): void
     {
         $admin = $this->createAdmin();

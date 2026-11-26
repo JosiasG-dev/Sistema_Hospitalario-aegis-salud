@@ -103,12 +103,20 @@ import { AuthService } from '../../services/auth.service';
           </button>
         </form>
 
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Buscar por artículo, proveedor, solicitante o ID..." 
+          [(ngModel)]="searchQuery" 
+          class="search-input" />
+      </div>
+
       <section class="module-records" aria-label="Solicitudes de compra">
-        @for (record of records.purchaseOrders(); track record.id) {
+        @for (record of filteredPurchaseOrders; track record.id) {
           <article class="module-record">
             <div class="module-record-head">
               <h3>{{ record.itemName }} <span class="module-muted">· {{ record.id }}</span></h3>
-              <span class="module-badge">{{ record.status }}</span>
+              <span class="module-badge" [ngClass]="{'badge-success': record.status === 'Recibida', 'badge-danger': record.status === 'Cancelada', 'badge-info': record.status === 'Aprobada', 'badge-warning': record.status === 'Por confirmar' || record.status === 'Solicitada'}">{{ record.status }}</span>
             </div>
             @if (record.requestedByName || record.requestedArea) {
               <p><strong>Área solicitante:</strong> {{ record.requestedArea || 'Área operativa' }} @if (record.requestedByName) { ({{ record.requestedByName }}) }</p>
@@ -121,7 +129,7 @@ import { AuthService } from '../../services/auth.service';
               @if (canApprove) {
                 <div class="module-record-foot">
                   <button type="button" class="module-submit" (click)="changeStatus(record.id, 'Aprobada')">Autorizar solicitud</button>
-                  <button type="button" class="module-button-secondary" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
+                  <button type="button" class="module-button-danger" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
                 </div>
               } @else {
                 <p class="module-muted"><strong>Estado:</strong> Pendiente de autorización del administrador.</p>
@@ -131,7 +139,7 @@ import { AuthService } from '../../services/auth.service';
                 <div class="module-record-foot">
                   <button type="button" class="module-submit" (click)="changeStatus(record.id, 'Por confirmar')">Registrar compra en almacén</button>
                   @if (canApprove) {
-                    <button type="button" class="module-button-secondary" (click)="changeStatus(record.id, 'Cancelada')">Cancelar</button>
+                    <button type="button" class="module-button-danger" (click)="changeStatus(record.id, 'Cancelada')">Cancelar</button>
                   }
                 </div>
               } @else {
@@ -140,16 +148,16 @@ import { AuthService } from '../../services/auth.service';
             } @else if (record.status === 'Por confirmar') {
               @if (isAdmin) {
                 <div class="module-record-foot">
-                  <button type="button" class="module-submit" (click)="changeStatus(record.id, 'Recibida')">Confirmar pedido correcto (Finalizar)</button>
-                  <button type="button" class="module-button-secondary" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
+                  <button type="button" class="module-submit module-button-success" (click)="changeStatus(record.id, 'Recibida')">Confirmar pedido correcto (Finalizar)</button>
+                  <button type="button" class="module-button-danger" (click)="changeStatus(record.id, 'Cancelada')">Rechazar</button>
                 </div>
               } @else {
                 <p class="module-muted"><strong>Estado:</strong> Registrado por Almacén · Pendiente de confirmación final de Administración.</p>
               }
             } @else if (record.status === 'Recibida') {
-              <p><strong>Recepción confirmada:</strong> existencias agregadas al almacén.</p>
+              <p style="color: #15803d; font-weight: 600;">Recepción confirmada: existencias agregadas al almacén.</p>
             } @else {
-              <p><strong>Solicitud cancelada:</strong> no se agregó al inventario.</p>
+              <p style="color: #b91c1c; font-weight: 600;">Solicitud rechazada / cancelada: no se agregó al inventario.</p>
             }
           </article>
         } @empty {
@@ -164,6 +172,7 @@ export class ComprasComponent {
   readonly drafts = inject(FormDraftService);
   readonly auth = inject(AuthService);
   readonly measurementUnits = MEASUREMENT_UNITS;
+  searchQuery = '';
 
   form = {
     supplier: '',
@@ -202,6 +211,21 @@ export class ComprasComponent {
 
   get receivedOrdersCount(): number {
     return this.records.purchaseOrders().filter(order => order.status === 'Recibida').length;
+  }
+
+  get filteredPurchaseOrders() {
+    const q = this.searchQuery.trim().toLowerCase();
+    const list = this.records.purchaseOrders();
+    if (!q) return list;
+    return list.filter(order =>
+      order.itemName.toLowerCase().includes(q) ||
+      order.supplier.toLowerCase().includes(q) ||
+      order.category.toLowerCase().includes(q) ||
+      (order.requestedByName && order.requestedByName.toLowerCase().includes(q)) ||
+      (order.requestedArea && order.requestedArea.toLowerCase().includes(q)) ||
+      order.id.toLowerCase().includes(q) ||
+      (order.status && order.status.toLowerCase().includes(q))
+    );
   }
 
   onCategoryChange(): void {

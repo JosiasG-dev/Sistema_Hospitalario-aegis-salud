@@ -41,8 +41,8 @@ export class HospitalService {
   readonly appointments = signal<Appointment[]>([]);
   readonly auditLogs = signal<AuditLog[]>([]);
 
-  readonly activePatientsCount = computed(() => this.patients().filter(patient => patient.status === 'Activo').length);
-  readonly dischargedPatientsCount = computed(() => this.patients().filter(patient => patient.status === 'Dado de Baja').length);
+  readonly activePatientsCount = computed(() => this.patients().filter(patient => patient.status === 'Activo' && !patient.medicalDischargeAt && !patient.dischargeDate).length);
+  readonly dischargedPatientsCount = computed(() => this.patients().filter(patient => patient.status === 'Dado de Alta' || patient.status === 'Dado de Baja' || !!patient.medicalDischargeAt || !!patient.dischargeDate).length);
   readonly activeDoctorsCount = computed(() => this.doctors().filter(doctor => doctor.status === 'Activo').length);
   readonly availableRoomsCount = computed(() => this.rooms().filter(room => room.status === 'Disponible').length);
   readonly activeAppointmentsCount = computed(() => this.appointments().filter(appointment => appointment.status === 'Programada').length);

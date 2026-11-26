@@ -492,9 +492,11 @@ class HospitalApiTest extends TestCase
         $this->actingAs($admin, 'sanctum')->postJson('/api/patients/'.$patient->id.'/administrative-discharge', [
             'masterPassword' => 'Hospital-Admin-Secret',
         ])->assertUnprocessable();
-        $this->actingAs($doctor, 'sanctum')->postJson('/api/patients/'.$patient->id.'/medical-discharge', [
+        $medResponse = $this->actingAs($doctor, 'sanctum')->postJson('/api/patients/'.$patient->id.'/medical-discharge', [
             'notes' => 'Paciente estable, se entregaron indicaciones de salida.',
         ])->assertOk();
+        $this->assertNotNull($medResponse->json('dischargeDate'));
+        $this->assertEquals('Alta Médica Autorizada', $medResponse->json('dischargeReason'));
         $this->actingAs($admin, 'sanctum')->postJson('/api/patients/'.$patient->id.'/administrative-discharge', [
             'masterPassword' => 'incorrecta',
         ])->assertUnprocessable();

@@ -445,8 +445,14 @@ export class OperationalRecordsService {
     doctorId: string; roomId: string; date: string; shift: 'M' | 'T' | 'N'; changeReason?: string;
   }): Promise<boolean> {
     return this.mutate('POST', '/api/doctor-assignments', {
-      doctor_id: data.doctorId, room_id: data.roomId,
-      date: data.date, shift: data.shift, change_reason: data.changeReason,
+      doctorId: data.doctorId,
+      roomId: data.roomId,
+      doctor_id: data.doctorId,
+      room_id: data.roomId,
+      date: data.date,
+      shift: data.shift,
+      changeReason: data.changeReason,
+      change_reason: data.changeReason,
     });
   }
 

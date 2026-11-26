@@ -261,6 +261,9 @@ class HospitalController extends Controller
         $patient->medical_discharge_at = now();
         $patient->medical_discharge_by = $request->user()->id;
         $patient->medical_discharge_notes = $data['notes'];
+        $patient->discharge_date = today();
+        $patient->discharge_reason = 'Alta Médica Autorizada';
+        $patient->discharge_notes = $data['notes'];
         $patient->save();
         $this->audit($request, 'Paciente', 'Alta médica autorizada', $patient->id, $patient->first_name.' '.$patient->last_name, $data['notes']);
         $this->notifyAdministrators('Alta médica autorizada', 'Un paciente está pendiente de autorización administrativa.');
@@ -749,10 +752,20 @@ class HospitalController extends Controller
 
     public function storeDoctorAssignment(Request $request): JsonResponse
     {
+        if ($request->has('doctor_id') && ! $request->has('doctorId')) {
+            $request->merge(['doctorId' => $request->input('doctor_id')]);
+        }
+        if ($request->has('room_id') && ! $request->has('roomId')) {
+            $request->merge(['roomId' => $request->input('room_id')]);
+        }
+        if ($request->has('change_reason') && ! $request->has('changeReason')) {
+            $request->merge(['changeReason' => $request->input('change_reason')]);
+        }
+
         $data = $request->validate([
             'doctorId' => ['required', 'exists:doctors,id'],
             'roomId' => ['required', 'exists:rooms,id'],
-            'date' => ['required', 'date', 'after_or_equal:today'],
+            'date' => ['required', 'date', 'after_or_equal:yesterday'],
             'shift' => ['required', Rule::in(['M', 'T', 'N', 'm', 't', 'n', 'Matutino', 'Vespertino', 'Nocturno'])],
             'changeReason' => ['nullable', 'string', 'max:500'],
         ]);
@@ -766,7 +779,7 @@ class HospitalController extends Controller
         $room = Room::findOrFail($data['roomId']);
 
         abort_if($doctor->status !== 'Activo', 422, 'El médico seleccionado no está activo.');
-        abort_if($room->status !== 'Disponible', 422, 'El consultorio seleccionado no está disponible.');
+        abort_if($room->status === 'Dado de Baja', 422, 'El consultorio seleccionado está dado de baja.');
 
         // Integrity Rule: No two doctors in the same room on the same date and shift
         $roomConflict = DoctorAssignment::where('date', $data['date'])
@@ -2571,6 +2584,9 @@ class HospitalController extends Controller
             'medicalDischargeAt' => $item->medical_discharge_at?->toIso8601String(),
             'administrativeDischargeAt' => $item->administrative_discharge_at?->toIso8601String(),
             'status' => $item->status,
+            'dischargeDate' => $item->discharge_date?->format('Y-m-d'),
+            'dischargeReason' => $item->discharge_reason,
+            'dischargeNotes' => $item->discharge_notes,
         ];
     }
 
